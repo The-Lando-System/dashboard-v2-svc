@@ -1,0 +1,17 @@
+{
+  "name": "dashboard-v2-svc",
+  "version": "1.0.0",
+  "description": "Service behind the Dashboard-V2 app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "the-lando-system",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.4",
+    "path": "^0.12.7",
+    "request": "^2.81.0",
+    "ws": "^3.2.0"
+  }
+}
