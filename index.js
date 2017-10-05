@@ -1,14 +1,11 @@
 var express = require('express');
 var request = require('request');
 var pathLib = require('path');
-var WebSocket = require('ws');
 
-const wss = new WebSocket.Server({ port: 8080 });
 
 // App Setup =========================
 
 var base = pathLib.resolve(__dirname);
-var configFile = require(base + '/config');
 
 var app = express();
 
@@ -18,10 +15,10 @@ app.use(function(req, res, next) {
   next();
 });
 
-// Global Vars =====================
+var server = require('http').createServer(app);
+var io = require('socket.io')(server);
 
-// Routes ===========================
-wss.on('connection', function connection(ws, req) {
+io.on('connection', function(ws){
   // Get a list of the relevant client configs
   var clientConfigs = getTestClientConfigs();
   
@@ -31,7 +28,7 @@ wss.on('connection', function connection(ws, req) {
   }
 });
 
-app.listen(3000, function () {
+server.listen(3000, function () {
   console.log('dashboard-v2 svc listening on port 3000!');
 });
 
@@ -42,7 +39,7 @@ var invokeClient = function(config,ws){
 
   // Set a repeat interval for invoking the client
   setInterval(function(){
-
+    
     // Build the request
     var options = {
       url: config.url,
@@ -58,8 +55,12 @@ var invokeClient = function(config,ws){
     
       // Parse the value from the response
       var parsedValue = parseResponse(config.response_parse_rules, JSON.parse(body));
-      console.log(parsedValue);
-      ws.send(parsedValue);
+
+      // Send the websocket message
+      var message = {};
+      message[config.name] = parsedValue;
+      ws.emit('value', message);
+    
     });
 
   }, config.interval);
@@ -104,19 +105,35 @@ var getTestClientConfigs = function() {
   var configs = [];
   configs.push({
     'id': '1',
-    'name': 'Google Places Search - Italian',
-    'url':'http://localhost:3002/google/places/query/38.8339,-104.8214/50000/italian',
+    'name': 'Dictionary Search 1',
+    'url':'http://localhost:3003/word-map/common-words',
     'method': 'GET',
-    'response_parse_rules': ['@results','#1','@name'],
+    'response_parse_rules': ['@a'],
     'interval': 5000
   });
   configs.push({
     'id': '2',
-    'name': 'Google Places Search - Beer',
-    'url':'http://localhost:3002/google/places/query/38.8339,-104.8214/50000/beer',
+    'name': 'Dictionary Search 2',
+    'url':'http://localhost:3003/word-map/common-words',
     'method': 'GET',
-    'response_parse_rules': ['@results','#1','@name'],
+    'response_parse_rules': ['@you'],
     'interval': 1000
   });
+  // configs.push({
+  //   'id': '1',
+  //   'name': 'Google Places Search - Italian',
+  //   'url':'http://localhost:3002/google/places/query/38.8339,-104.8214/50000/italian',
+  //   'method': 'GET',
+  //   'response_parse_rules': ['@results','#1','@name'],
+  //   'interval': 5000
+  // });
+  // configs.push({
+  //   'id': '2',
+  //   'name': 'Google Places Search - Beer',
+  //   'url':'http://localhost:3002/google/places/query/38.8339,-104.8214/50000/beer',
+  //   'method': 'GET',
+  //   'response_parse_rules': ['@results','#1','@name'],
+  //   'interval': 1000
+  // });
   return configs;
 }
