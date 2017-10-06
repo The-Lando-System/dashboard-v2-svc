@@ -58,7 +58,7 @@ var invokeClient = function(config,ws){
 
       // Send the websocket message
       var message = {};
-      message[config.name] = parsedValue;
+      message[config.token] = parsedValue;
       ws.emit('value', message);
     
     });
@@ -106,6 +106,7 @@ var getTestClientConfigs = function() {
   configs.push({
     'id': '1',
     'name': 'Dictionary Search 1',
+    'token': 'WORD1',
     'url':'http://localhost:3003/word-map/common-words',
     'method': 'GET',
     'response_parse_rules': ['@a'],
@@ -114,6 +115,7 @@ var getTestClientConfigs = function() {
   configs.push({
     'id': '2',
     'name': 'Dictionary Search 2',
+    'token': 'WORD2',
     'url':'http://localhost:3003/word-map/common-words',
     'method': 'GET',
     'response_parse_rules': ['@you'],
