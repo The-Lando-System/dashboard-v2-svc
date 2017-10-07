@@ -57,9 +57,12 @@ var invokeClient = function(config,ws){
       var parsedValue = parseResponse(config.response_parse_rules, JSON.parse(body));
 
       // Send the websocket message
-      var message = {};
-      message[config.token] = parsedValue;
-      ws.emit('value', message);
+      var message = {
+        'client_id' : config.id,
+        'token_name' : config.token,
+        'token_value': parsedValue
+      };
+      ws.emit('TOKEN_UPDATE', message);
     
     });
 
