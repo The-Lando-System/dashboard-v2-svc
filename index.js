@@ -24,7 +24,7 @@ io.on('connection', function(ws){
   
   // Invoke a client for each configuration
   for(var config of clientConfigs) {
-    invokeClient(config,ws);
+    startClient(config,ws);
   }
 });
 
@@ -35,11 +35,10 @@ server.listen(3000, function () {
 // Helper Functions =========================
 
 // Invoke a client with a provided configuration
-var invokeClient = function(config,ws){
+var startClient = function(config,ws){
 
-  // Set a repeat interval for invoking the client
-  setInterval(function(){
-    
+  // Declare the function to invoke a client
+  var invokeClient = function() {
     // Build the request
     var options = {
       url: config.url,
@@ -65,8 +64,13 @@ var invokeClient = function(config,ws){
       ws.emit('TOKEN_UPDATE', message);
     
     });
+  };
 
-  }, config.interval);
+  // Invoke the client for the first time
+  invokeClient();
+
+  // Set a repeat interval for invoking the client
+  setInterval(invokeClient, config.interval);
 };
 
 // Parse a value from JSON using the provided parsing rules
@@ -141,6 +145,10 @@ var getTestClientConfigs = function() {
     {
       'name':'CURRENT_TEMP_ICON',
       'parse_rules':['@current_observation','@icon_url']
+    },
+    {
+      'name':'OBS_TIME',
+      'parse_rules':['@current_observation','@observation_time']
     }
     ],
     'url':'http://api.wunderground.com/api/018eb35a6a033212/conditions/q/CO/Colorado_Springs.json',
