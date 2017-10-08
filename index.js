@@ -54,13 +54,13 @@ var invokeClient = function(config,ws){
       }
     
       // Parse the value from the response
-      var parsedValue = parseResponse(config.response_parse_rules, JSON.parse(body));
+      var parsedValues = parseResponse(config.tokens, JSON.parse(body));
 
       // Send the websocket message
       var message = {
         'client_id' : config.id,
         'token_name' : config.token,
-        'token_value': parsedValue
+        'parsed_values': parsedValues
       };
       ws.emit('TOKEN_UPDATE', message);
     
@@ -70,26 +70,37 @@ var invokeClient = function(config,ws){
 };
 
 // Parse a value from JSON using the provided parsing rules
-var parseResponse = function(parseRules, json) {
-  var parsedValue = json;
+var parseResponse = function(tokens, json) {
+  var parsedValues = [];
+
+  for (var token of tokens) {
+
+    var parsedValue = json;
+
+    for (var rule of token.parse_rules){
+      
+      // Get the value of a property
+      if (rule.indexOf('@') != -1) {
+        rule = rule.replace('@','');
+        parsedValue = parsedValue[rule];
+      }
   
-  for (var rule of parseRules){
+      // Select an element from an array
+      if (rule.indexOf('#') != -1) {
+        rule = rule.replace('#','');
+        parsedValue = parsedValue[parseInt(rule)];
+      }
 
-    // Get the value of a property
-    if (rule.indexOf('@') != -1) {
-      rule = rule.replace('@','');
-      parsedValue = parsedValue[rule];
     }
 
-    // Select an element from an array
-    if (rule.indexOf('#') != -1) {
-      rule = rule.replace('#','');
-      parsedValue = parsedValue[parseInt(rule)];
-    }
+    parsedValues.push({
+      'token_name' : token.name,
+      'parsed_value' : parsedValue
+    })
 
   }
 
-  return parsedValue;
+  return parsedValues;
 };
 
 // Build request parameters
@@ -109,20 +120,32 @@ var getTestClientConfigs = function() {
   configs.push({
     'id': '1',
     'name': 'Dictionary Search 1',
-    'token': 'WORD1',
+    'tokens': [
+    {
+      'name':'WORD1',
+      'parse_rules':['@a']
+    }
+    ],
     'url':'http://localhost:3003/word-map/common-words',
     'method': 'GET',
-    'response_parse_rules': ['@a'],
     'interval': 5000
   });
   configs.push({
     'id': '2',
-    'name': 'Dictionary Search 2',
-    'token': 'WORD2',
-    'url':'http://localhost:3003/word-map/common-words',
+    'name': 'Springs Weather',
+    'tokens': [
+    {
+      'name':'CURRENT_TEMP',
+      'parse_rules':['@current_observation','@temperature_string']
+    },
+    {
+      'name':'CURRENT_TEMP_ICON',
+      'parse_rules':['@current_observation','@icon_url']
+    }
+    ],
+    'url':'http://api.wunderground.com/api/018eb35a6a033212/conditions/q/CO/Colorado_Springs.json',
     'method': 'GET',
-    'response_parse_rules': ['@you'],
-    'interval': 1000
+    'interval': 30000
   });
   // configs.push({
   //   'id': '1',
