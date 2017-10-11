@@ -2,6 +2,7 @@ var express = require('express');
 var request = require('request');
 var pathLib = require('path');
 var mongoose = require('mongoose');
+var bodyParser = require('body-parser');
 
 // App Setup =========================
 var base = pathLib.resolve(__dirname);
@@ -26,6 +27,9 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 require('./routes')(app);
 require('./socket')(app); // Server starts in here; leave at the end
