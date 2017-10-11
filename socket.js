@@ -1,18 +1,26 @@
 var request = require('request');
 
+var ClientConfig = require('./client-config');
+
 module.exports = function(app) {
 
     var server = require('http').createServer(app);
     var io = require('socket.io')(server);
 
     io.on('connection', function(ws){
+
       // Get a list of the relevant client configs
-      var clientConfigs = getTestClientConfigs();
-      
-      // Invoke a client for each configuration
-      for(var config of clientConfigs) {
-        startClient(config,ws);
-      }
+      ClientConfig.find({}, function(err, configs){
+        if (err) { console.log(err); }
+        //var clientConfigs = JSON.parse(configs);
+
+        // Invoke a client for each configuration
+        for(var config of configs) {
+          startClient(config,ws);
+        }
+        
+      });
+
     });
 
     server.listen(3000, function () {
@@ -95,60 +103,3 @@ var parseResponse = function(tokens, json) {
 
   return parsedValues;
 };
-
-// For Testing =================================
-
-var getTestClientConfigs = function() {
-  var configs = [];
-  configs.push({
-    'id': '1',
-    'name': 'Dictionary Search 1',
-    'tokens': [
-    {
-      'name':'WORD1',
-      'parse_rules':['@a']
-    }
-    ],
-    'url':'http://localhost:3003/word-map/common-words',
-    'method': 'GET',
-    'interval': 5000
-  });
-  configs.push({
-    'id': '2',
-    'name': 'Springs Weather',
-    'tokens': [
-    {
-      'name':'CURRENT_TEMP',
-      'parse_rules':['@current_observation','@temperature_string']
-    },
-    {
-      'name':'CURRENT_TEMP_ICON',
-      'parse_rules':['@current_observation','@icon_url']
-    },
-    {
-      'name':'OBS_TIME',
-      'parse_rules':['@current_observation','@observation_time']
-    }
-    ],
-    'url':'http://api.wunderground.com/api/018eb35a6a033212/conditions/q/CO/Colorado_Springs.json',
-    'method': 'GET',
-    'interval': 30000
-  });
-  // configs.push({
-  //   'id': '1',
-  //   'name': 'Google Places Search - Italian',
-  //   'url':'http://localhost:3002/google/places/query/38.8339,-104.8214/50000/italian',
-  //   'method': 'GET',
-  //   'response_parse_rules': ['@results','#1','@name'],
-  //   'interval': 5000
-  // });
-  // configs.push({
-  //   'id': '2',
-  //   'name': 'Google Places Search - Beer',
-  //   'url':'http://localhost:3002/google/places/query/38.8339,-104.8214/50000/beer',
-  //   'method': 'GET',
-  //   'response_parse_rules': ['@results','#1','@name'],
-  //   'interval': 1000
-  // });
-  return configs;
-}
