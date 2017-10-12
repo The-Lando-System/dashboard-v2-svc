@@ -12,7 +12,6 @@ module.exports = function(app) {
       // Get a list of the relevant client configs
       ClientConfig.find({}, function(err, configs){
         if (err) { console.log(err); }
-        //var clientConfigs = JSON.parse(configs);
 
         // Invoke a client for each configuration
         for(var config of configs) {
