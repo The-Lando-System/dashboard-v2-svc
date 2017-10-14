@@ -1,4 +1,5 @@
 var uuidv4 = require('uuid/v4');
+var request = require('request');
 
 var WidgetTemplate = require('./widget-template');
 var ClientConfig = require('./client-config');
@@ -9,27 +10,26 @@ module.exports = function(app) {
 
     app.post('/widget/template', function (req, res) {
 
-        var widgetTemplate = req.body.widget_template;
-        var newWidgetTemplate = {
-            'id': uuidv4(),
-            'name': widgetTemplate.name,
-            'html': widgetTemplate.html,
-            'clientIds': widgetTemplate.clientIds,
-            'tokens': widgetTemplate.tokens
-        };
+      var newWidgetTemplate = {
+        'id': uuidv4(),
+        'name': req.body.name,
+        'html': req.body.html,
+        'clientIds': req.body.clientIds,
+        'tokens': req.body.tokens
+      };
 
-        WidgetTemplate.create(newWidgetTemplate, function(err, template){
-            if (err) { res.send(err); return; }
-            res.send(template);
-        });
+      WidgetTemplate.create(newWidgetTemplate, function(err, template){
+        if (err) { res.send(err); return; }
+        res.send(template);
+      });
     });
 
     app.get('/widget/template', function (req, res) {
-        WidgetTemplate.find({}, function(err, templates){
-            if (err) { res.send(err); return; }
-            res.json(templates);
-            return;
-        });
+      WidgetTemplate.find({}, function(err, templates){
+        if (err) { res.send(err); return; }
+        res.json(templates);
+        return;
+      });
     });
 
     app.put('/widget/template/:id', function (req, res) {
@@ -58,22 +58,22 @@ module.exports = function(app) {
 
     app.post('/client', function (req, res) {
 
-        var newClientConfig = {
-          'id': uuidv4(),
-          'name': req.body.name,
-          'tokens': req.body.tokens,
-          'url': req.body.url,
-          'method' : req.body.method,
-          'interval' : req.body.interval
-        };
+      var newClientConfig = {
+        'id': uuidv4(),
+        'name': req.body.name,
+        'tokens': req.body.tokens,
+        'url': req.body.url,
+        'method' : req.body.method,
+        'interval' : req.body.interval
+      };
 
-        ClientConfig.create(newClientConfig, function(err, template){
-            if (err) { res.send(err); return; }
-            res.send(template);
-        });
+      ClientConfig.create(newClientConfig, function(err, template){
+        if (err) { res.send(err); return; }
+        res.send(template);
+      });
     });
 
-    app.put('/client/:id', function (req, res) {
+    app.put('/client/:id', function(req,res) {
       ClientConfig.find({'id':req.params.id}, function(err,clientConfigs){
         
         var clientConfig = clientConfigs[0];
@@ -94,11 +94,29 @@ module.exports = function(app) {
       });
     });
 
-    app.get('/client', function (req, res) {
+    app.get('/client', function(req,res) {
         ClientConfig.find({}, function(err, configs){
-            if (err) { res.send(err); return; }
-            res.json(configs);
-            return;
+          if (err) { res.send(err); return; }
+          res.json(configs);
+          return;
         });
+    });
+
+    app.post('/client/test', function(req,res) {
+      
+      // Build the request
+      var options = {
+        url: req.body.url,
+        method: req.body.method
+      }
+
+      // Invoke the request
+      request(options, function(error, response, body) {
+        if (error || response.statusCode != 200) {
+          res.status(400).send(error.message);
+          return;
+        }
+        res.json(body);
+      });
     });
 };
