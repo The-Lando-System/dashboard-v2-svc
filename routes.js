@@ -58,20 +58,40 @@ module.exports = function(app) {
 
     app.post('/client', function (req, res) {
 
-        var clientConfig = req.body.client_config;
         var newClientConfig = {
-            'id': uuidv4(),
-            'name': clientConfig.name,
-            'tokens': clientConfig.tokens,
-            'url': clientConfig.url,
-            'method' : clientConfig.method,
-            'interval' : clientConfig.interval
+          'id': uuidv4(),
+          'name': req.body.name,
+          'tokens': req.body.tokens,
+          'url': req.body.url,
+          'method' : req.body.method,
+          'interval' : req.body.interval
         };
 
         ClientConfig.create(newClientConfig, function(err, template){
             if (err) { res.send(err); return; }
             res.send(template);
         });
+    });
+
+    app.put('/client/:id', function (req, res) {
+      ClientConfig.find({'id':req.params.id}, function(err,clientConfigs){
+        
+        var clientConfig = clientConfigs[0];
+        
+        clientConfig.name     = req.body.name     || clientConfig.name;
+        clientConfig.url      = req.body.url      || clientConfig.url;
+        clientConfig.tokens   = req.body.tokens   || clientConfig.tokens;
+        clientConfig.method   = req.body.method   || clientConfig.method;
+        clientConfig.interval = req.body.interval || clientConfig.interval;
+
+        clientConfig.save(function(err){
+          if (err) {
+            res.send(err)
+          } else {
+            res.json({ message: 'Client Config with ID ' + req.params.id + ' was successfully updated!' });
+          }
+        });
+      });
     });
 
     app.get('/client', function (req, res) {
