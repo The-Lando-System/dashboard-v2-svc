@@ -102,6 +102,18 @@ module.exports = function(app) {
         });
     });
 
+    app.delete('/client/:id', function(req,res) {
+      ClientConfig.remove({'id': req.params.id }, function(err,clientConfig){
+        if (err) {
+          res.send(err);
+          return;
+        } else {
+          res.send(clientConfig);
+          return;
+        }
+      });
+    });
+
     app.post('/client/test', function(req,res) {
       
       // Build the request

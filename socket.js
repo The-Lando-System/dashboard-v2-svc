@@ -15,6 +15,7 @@ module.exports = function(app) {
 
         // Invoke a client for each configuration
         for(var config of configs) {
+          config.error_count = 0;
           startClient(config,ws);
         }
         
@@ -35,6 +36,14 @@ var startClient = function(config,ws){
 
   // Declare the function to invoke a client
   var invokeClient = function() {
+
+    if (config.error_count === 6) {
+      config.error_count++;
+      console.log(`Ignoring client name [${config.name}] with id [${config.id}]\n--> Failed more than 5 requests`);
+      return;
+    }
+    if (config.error_count > 6) { return; }
+
     // Build the request
     var options = {
       url: config.url,
@@ -44,7 +53,9 @@ var startClient = function(config,ws){
     // Invoke the request
     request(options, function(error, response, body) {
       if (error || response.statusCode != 200) {
-        console.log(error);
+        console.log(`ERROR: Client name [${config.name}] with id [${config.id}] encountered and error:\n--> ${error.message}`);
+        config.error_count++;
+        console.log(`--> Incrementing error count to ${config.error_count}`);
         return;
       }
     
