@@ -54,6 +54,18 @@ module.exports = function(app) {
 		  });
     });
 
+    app.delete('/widget/template/:id', function(req,res) {
+      WidgetTemplate.remove({'id': req.params.id }, function(err,widget){
+        if (err) {
+          res.send(err);
+          return;
+        } else {
+          res.send(widget);
+          return;
+        }
+      });
+    });
+
     // Clients =======================================
 
     app.post('/client', function (req, res) {
