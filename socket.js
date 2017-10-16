@@ -44,33 +44,24 @@ var startClient = function(config,ws){
     }
     if (config.error_count > 6) { return; }
 
-    // Build the request
-    var options = {
-      url: config.url,
-      method: config.method
+    // Perform OAuth2 if specified
+    if (config.oauth2_config) {
+      getAccessToken(config.oauth2_config, function(error, response, body) {
+
+        body = JSON.parse(body);
+
+        var headers = {
+          'Authorization': 'Bearer ' + body.access_token
+        };
+
+        config.headers = headers;
+      
+        makeRequest(ws,config);
+      });
+    } else {
+      makeRequest(ws,config);
     }
-
-    // Invoke the request
-    request(options, function(error, response, body) {
-      if (error || response.statusCode != 200) {
-        console.log(`ERROR: Client name [${config.name}] with id [${config.id}] encountered an error:\n--> ${error.message}`);
-        config.error_count++;
-        console.log(`--> Incrementing error count to ${config.error_count}`);
-        return;
-      }
     
-      // Parse the value from the response
-      var parsedValues = parseResponse(config.tokens, JSON.parse(body));
-
-      // Send the websocket message
-      var message = {
-        'client_id' : config.id,
-        'token_name' : config.token,
-        'parsed_values': parsedValues
-      };
-      ws.emit('TOKEN_UPDATE', message);
-    
-    });
   };
 
   // Invoke the client for the first time
@@ -78,6 +69,63 @@ var startClient = function(config,ws){
 
   // Set a repeat interval for invoking the client
   setInterval(invokeClient, config.interval);
+};
+
+// Make the request
+var makeRequest = function(ws,config) {
+  
+  // Build the request
+  var options = {
+    url: config.url,
+    method: config.method
+  };
+
+  // Apply headers
+  if (config.headers) {
+    options.headers = config.headers
+  }
+
+  // Invoke the request
+  request(options, function(error, response, body) {
+    if (error || response.statusCode != 200) {
+      console.log(`ERROR: Client name [${config.name}] with id [${config.id}] encountered an error:\n--> ${error.message}`);
+      config.error_count++;
+      console.log(`--> Incrementing error count to ${config.error_count}`);
+      return;
+    }
+  
+    // Parse the value from the response
+    var parsedValues = parseResponse(config.tokens, JSON.parse(body));
+
+    // Send the websocket message
+    var message = {
+      'client_id' : config.id,
+      'token_name' : config.token,
+      'parsed_values': parsedValues
+    };
+    ws.emit('TOKEN_UPDATE', message);
+  });
+};
+
+
+// Get an OAuth2 access token
+var getAccessToken = function(authConfig, callback) {
+  
+  var authStr = new Buffer( authConfig.api_key + ':' + authConfig.api_secret).toString('base64');
+
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Basic ' + authStr
+  }
+
+  var options = {
+    url: authConfig.auth_url,
+    method: 'POST',
+    headers: headers,
+    form: {'grant_type': 'client_credentials'}
+  }
+
+  request(options, callback);
 };
 
 // Parse a value from JSON using the provided parsing rules

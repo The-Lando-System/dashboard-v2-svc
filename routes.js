@@ -76,7 +76,8 @@ module.exports = function(app) {
         'tokens': req.body.tokens,
         'url': req.body.url,
         'method' : req.body.method,
-        'interval' : req.body.interval
+        'interval' : req.body.interval,
+        'oauth2_config' : req.body.oauth2_config
       };
 
       ClientConfig.create(newClientConfig, function(err, template){
@@ -90,11 +91,12 @@ module.exports = function(app) {
         
         var clientConfig = clientConfigs[0];
         
-        clientConfig.name     = req.body.name     || clientConfig.name;
-        clientConfig.url      = req.body.url      || clientConfig.url;
-        clientConfig.tokens   = req.body.tokens   || clientConfig.tokens;
-        clientConfig.method   = req.body.method   || clientConfig.method;
+        clientConfig.name = req.body.name || clientConfig.name;
+        clientConfig.url = req.body.url || clientConfig.url;
+        clientConfig.tokens = req.body.tokens || clientConfig.tokens;
+        clientConfig.method = req.body.method || clientConfig.method;
         clientConfig.interval = req.body.interval || clientConfig.interval;
+        clientConfig.oauth2_config = req.body.oauth2_config || clientConfig.oauth2_config;
 
         clientConfig.save(function(err){
           if (err) {
@@ -136,6 +138,8 @@ module.exports = function(app) {
 
           body = JSON.parse(body);
 
+          console.log(body);
+
           var headers = {
             'Authorization': 'Bearer ' + body.access_token
           };
@@ -143,12 +147,10 @@ module.exports = function(app) {
           clientConfig.headers = headers;
         
           testRequest(res,clientConfig);
-          return;
         });
+      } else {
+        testRequest(res,clientConfig);
       }
-      
-      testRequest(res,clientConfig);
-
     });
 };
 
