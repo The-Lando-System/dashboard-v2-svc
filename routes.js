@@ -128,19 +128,68 @@ module.exports = function(app) {
 
     app.post('/client/test', function(req,res) {
       
-      // Build the request
-      var options = {
-        url: req.body.url,
-        method: req.body.method
-      }
+      var clientConfig = req.body;
 
-      // Invoke the request
-      request(options, function(error, response, body) {
-        if (error || response.statusCode != 200) {
-          res.status(400).send(error.message);
+      // Perform OAuth2 if specified
+      if (clientConfig.oauth2_config) {
+        getAccessToken(clientConfig.oauth2_config, function(error, response, body) {
+
+          body = JSON.parse(body);
+
+          var headers = {
+            'Authorization': 'Bearer ' + body.access_token
+          };
+
+          clientConfig.headers = headers;
+        
+          testRequest(res,clientConfig);
           return;
-        }
-        res.json(body);
-      });
+        });
+      }
+      
+      testRequest(res,clientConfig);
+
     });
+};
+
+var testRequest = function(res,clientConfig) {
+  
+  // Build the request
+  var options = {
+    url: clientConfig.url,
+    method: clientConfig.method
+  };
+
+  // Apply headers
+  if (clientConfig.headers) {
+    options.headers = clientConfig.headers
+  }
+
+  // Invoke the request
+  request(options, function(error, response, body) {
+    if (error || response.statusCode != 200) {
+      res.status(400).send(error.message);
+      return;
+    }
+    res.json(body);
+  });
+};
+
+var getAccessToken = function(authConfig, callback) {
+    
+  var authStr = new Buffer( authConfig.api_key + ':' + authConfig.api_secret).toString('base64');
+
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Authorization': 'Basic ' + authStr
+  }
+  
+  var options = {
+    url: authConfig.auth_url,
+    method: 'POST',
+    headers: headers,
+    form: {'grant_type': 'client_credentials'}
+  }
+  
+  request(options, callback);
 };
