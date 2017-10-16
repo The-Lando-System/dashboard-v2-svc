@@ -138,8 +138,6 @@ module.exports = function(app) {
 
           body = JSON.parse(body);
 
-          console.log(body);
-
           var headers = {
             'Authorization': 'Bearer ' + body.access_token
           };
