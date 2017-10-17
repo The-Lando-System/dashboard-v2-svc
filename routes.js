@@ -143,7 +143,7 @@ module.exports = function(app) {
       };
 
       // Perform OAuth2 if specified
-      if (clientConfig.oauth2_config) {
+      if (clientConfig.oauth2_config && Object.keys(clientConfig.oauth2_config).length > 0) {
         clientRequest.makeRequestOauth2(clientConfig, sendResponse);
       } else {
         clientRequest.makeRequest(clientConfig, sendResponse);
