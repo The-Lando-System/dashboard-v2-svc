@@ -20,11 +20,13 @@ module.exports = {
     request(options, requestCb);
   },
   
-  // Get an OAuth2 access token
-  requestOauth2Token: function(clientConfig, callback) {
+  // Make a request with OAuth2 authentication
+  makeRequestOauth2: function(clientConfig, callback) {
   
-    var authStr = new Buffer( clientConfig.oauth2_config.api_key + ':' + clientConfig.oauth2_config.api_secret).toString('base64');
-    
+    var authStr = new Buffer(
+      clientConfig.oauth2_config.api_key + ':' + clientConfig.oauth2_config.api_secret
+    ).toString('base64');
+
     var headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Authorization': 'Basic ' + authStr
@@ -35,11 +37,15 @@ module.exports = {
       method: 'POST',
       headers: headers,
       form: {'grant_type': 'client_credentials'}
-    }
+    };
 
     request(options, function(error, response, body) {
       
-      body = JSON.parse(body);
+      try {
+        body = JSON.parse(body);
+      } catch(e) {
+        return;
+      }
 
       var headers = {
         'Authorization': 'Bearer ' + body.access_token
@@ -50,9 +56,6 @@ module.exports = {
       module.exports.makeRequest(clientConfig, callback);
     });
   },
-
-  // Handle the OAuth2 response
-
 
   // Parse a value from JSON using the provided parsing rules
   parseResponse: function(tokens, json) {

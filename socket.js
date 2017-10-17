@@ -68,7 +68,7 @@ var startClient = function(config,ws){
 
     // Perform OAuth2 if specified
     if (config.oauth2_config) {
-      clientRequest.requestOauth2Token(config, handleResponse);
+      clientRequest.makeRequestOauth2(config, handleResponse);
     } else {
       clientRequest.makeRequest(config, handleResponse);
     }
