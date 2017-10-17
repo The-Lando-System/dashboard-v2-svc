@@ -1,6 +1,8 @@
 var uuidv4 = require('uuid/v4');
 var request = require('request');
 
+var clientRequest = require('./client-request');
+
 var WidgetTemplate = require('./widget-template');
 var ClientConfig = require('./client-config');
 
@@ -132,64 +134,19 @@ module.exports = function(app) {
       
       var clientConfig = req.body;
 
+      var sendResponse = function(error, response, body) {
+        if (error || response.statusCode != 200) {
+          res.status(400).send(error.message);
+          return;
+        }
+        res.json(body);
+      };
+
       // Perform OAuth2 if specified
       if (clientConfig.oauth2_config) {
-        getAccessToken(clientConfig.oauth2_config, function(error, response, body) {
-
-          body = JSON.parse(body);
-
-          var headers = {
-            'Authorization': 'Bearer ' + body.access_token
-          };
-
-          clientConfig.headers = headers;
-        
-          testRequest(res,clientConfig);
-        });
+        clientRequest.requestOauth2Token(clientConfig, sendResponse);
       } else {
-        testRequest(res,clientConfig);
+        clientRequest.makeRequest(clientConfig, sendResponse);
       }
     });
-};
-
-var testRequest = function(res,clientConfig) {
-  
-  // Build the request
-  var options = {
-    url: clientConfig.url,
-    method: clientConfig.method
-  };
-
-  // Apply headers
-  if (clientConfig.headers) {
-    options.headers = clientConfig.headers
-  }
-
-  // Invoke the request
-  request(options, function(error, response, body) {
-    if (error || response.statusCode != 200) {
-      res.status(400).send(error.message);
-      return;
-    }
-    res.json(body);
-  });
-};
-
-var getAccessToken = function(authConfig, callback) {
-    
-  var authStr = new Buffer( authConfig.api_key + ':' + authConfig.api_secret).toString('base64');
-
-  var headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Authorization': 'Basic ' + authStr
-  }
-  
-  var options = {
-    url: authConfig.auth_url,
-    method: 'POST',
-    headers: headers,
-    form: {'grant_type': 'client_credentials'}
-  }
-  
-  request(options, callback);
 };
