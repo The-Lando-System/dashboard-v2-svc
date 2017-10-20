@@ -25,5 +25,11 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+var server = require('http').createServer(app);
+
 require('./routes')(app);
-require('./socket')(app); // Server starts in here; leave at the end
+require('./socket')(app, server);
+
+server.listen(3000, function () {
+  console.log('dashboard-v2-svc listening on port 3000!');
+});
