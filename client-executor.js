@@ -31,7 +31,7 @@ module.exports = {
       
       var handleResponse = function(error, response, body) {
         if (error || response.statusCode != 200) {
-          console.log(`ERROR: Client name [${config.name}] with id [${config.id}] encountered an error:\n--> ${error.message}`);
+          console.log(`ERROR: Client name [${config.name}] with id [${config.id}] encountered an error:\n--> ${error ? error.message : 'unknown'}`);
           config.error_count++;
           console.log(`--> Incrementing error count to ${config.error_count}`);
           return;
@@ -46,8 +46,6 @@ module.exports = {
           'token_name' : config.token,
           'parsed_values': parsedValues
         };
-
-        console.log('sending token update');
 
         websocket.emit('TOKEN_UPDATE', message);
       };

@@ -136,7 +136,7 @@ module.exports = function(app) {
 
     var sendResponse = function(error, response, body) {
       if (error || response.statusCode != 200) {
-        res.status(400).send(error.message);
+        res.status(400).send(error ? error.message : 'unknown error occurred');
         return;
       }
       res.json(body);
