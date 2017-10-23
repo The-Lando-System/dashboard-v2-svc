@@ -1,12 +1,25 @@
 var uuidv4 = require('uuid/v4');
 var request = require('request');
 
+var configFile = require('./config');
+
 var clientRequest = require('./client-request');
 
 var WidgetTemplate = require('./widget-template');
 var ClientConfig = require('./client-config');
 
 module.exports = function(app) {
+
+  // Google Auth ===================================
+  
+  app.get('/google/client-id', function (req, res) {
+    if (configFile.google_client_id) {
+      res.send({'client_id':configFile.google_client_id});
+    } else {
+      res.status(500);
+      res.send({'ERROR':'Could not get the google client id! Check to see that it is present in config.js'});
+    }
+  });
 
   // Widgets =======================================
 
