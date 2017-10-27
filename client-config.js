@@ -3,6 +3,7 @@ var Mixed = mongoose.Schema.Types.Mixed;
 
 module.exports = mongoose.model('ClientConfig', {
   id:            { type: String, default: '' },
+  userId:        { type: String, default: '' },
   name:          { type: String, default: '' },
   tokens:        { type: [Mixed] },
   url:           { type: String, default: '' },

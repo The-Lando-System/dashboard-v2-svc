@@ -3,10 +3,10 @@ var ClientConfig = require('./client-config');
 
 module.exports = {
 
-  executeClients: function(websocket) {
+  executeClients: function(websocket, userId) {
 
     // Get a list of the relevant client configs
-    ClientConfig.find({}, function(err, configs){
+    ClientConfig.find({'userId':userId}, function(err, configs){
       if (err) { console.log(err); return; }
 
       // Invoke a client for each configuration

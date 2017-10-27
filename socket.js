@@ -10,7 +10,7 @@ module.exports = function(app,server) {
   });
 
   app.post('/client/restart-clients', function(req,res) {
-    clientExecutor.executeClients(websocket);
+    clientExecutor.executeClients(websocket,req.id);
     res.send({'message':'Clients successfully restarted!'});
   });
 

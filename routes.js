@@ -1,7 +1,7 @@
 var uuidv4 = require('uuid/v4');
-var request = require('request');
 
 var configFile = require('./config');
+var request = require('request');
 
 var clientRequest = require('./client-request');
 
@@ -11,7 +11,7 @@ var ClientConfig = require('./client-config');
 module.exports = function(app) {
 
   // Google Auth ===================================
-  
+
   app.get('/google/client-id', function (req, res) {
     if (configFile.google_client_id) {
       res.send({'client_id':configFile.google_client_id});
@@ -21,12 +21,44 @@ module.exports = function(app) {
     }
   });
 
+  app.use(function(req,res,next){
+    var access_token = req.headers['x-access-token'];
+
+    if (!access_token) {
+      return res.status(400).json({
+        'error' : 'No access token provided!',
+        'details' : 'The header [x-access-token] must be provided in the request'
+      });
+    }
+
+    var options = {
+      url: `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${access_token}`,
+      method: 'POST'
+    };
+    request(options, function(error, response, body) {
+      var tokenInfo = JSON.parse(body);
+
+      if (!tokenInfo || !tokenInfo.email) {
+        var error_message = {
+          'error' : `Failed to verify access token [${access_token}]`
+        };
+        if (error && error.message) {
+          error_message.details = error.message;
+        }
+        return res.status(400).json(error_message);
+      }
+      req.id = tokenInfo.email;
+      next();
+    });
+  });
+
   // Widgets =======================================
 
   app.post('/widget/template', function (req, res) {
 
     var newWidgetTemplate = {
       'id': uuidv4(),
+      'userId': req.id,
       'name': req.body.name,
       'html': req.body.html,
       'clientIds': req.body.clientIds,
@@ -40,7 +72,7 @@ module.exports = function(app) {
   });
 
   app.get('/widget/template', function (req, res) {
-    WidgetTemplate.find({}, function(err, templates){
+    WidgetTemplate.find({'userId':req.id}, function(err, templates){
       if (err) { res.send(err); return; }
       res.json(templates);
       return;
@@ -50,8 +82,9 @@ module.exports = function(app) {
   app.put('/widget/template/:id', function (req, res) {
     WidgetTemplate.find({'id':req.params.id}, function(err,widgetTemplates){
       if (err) { res.send(err); return; }
-      if (widgetTemplates.length > 1) { res.send({'ERROR':'Found more than one widget with id: ' + req.params.id}); return; }
-      if (widgetTemplates.length === 0) { res.send({'ERROR':'Found no widgets with id: ' + req.params.id}); return; }
+      if (widgetTemplates.length > 1) { res.send({'error':'Found more than one widget with id: ' + req.params.id}); return; }
+      if (widgetTemplates.length === 0) { res.send({'error':'Found no widgets with id: ' + req.params.id}); return; }
+      if (req.id !== widgetTemplates[0].userId) { res.send({'error':'User does not have permissions to edit widget with id: ' + req.params.id}); return; }
 
       var widgetTemplate = widgetTemplates[0];
 
@@ -70,14 +103,21 @@ module.exports = function(app) {
   });
 
   app.delete('/widget/template/:id', function(req,res) {
-    WidgetTemplate.remove({'id': req.params.id }, function(err,widget){
-      if (err) {
-        res.send(err);
-        return;
-      } else {
-        res.send(widget);
-        return;
-      }
+    WidgetTemplate.find({'id':req.params.id}, function(err,widgetTemplates){
+      if (err) { res.send(err); return; }
+      if (widgetTemplates.length > 1) { res.send({'error':'Found more than one widget with id: ' + req.params.id}); return; }
+      if (widgetTemplates.length === 0) { res.send({'error':'Found no widgets with id: ' + req.params.id}); return; }
+      if (req.id !== widgetTemplates[0].userId) { res.send({'error':'User does not have permissions to delete widget with id: ' + req.params.id}); return; }
+
+      WidgetTemplate.remove({'id': req.params.id }, function(err,widget){
+        if (err) {
+          res.send(err);
+          return;
+        } else {
+          res.send(widget);
+          return;
+        }
+      });
     });
   });
 
@@ -87,6 +127,7 @@ module.exports = function(app) {
 
     var newClientConfig = {
       'id': uuidv4(),
+      "userId": req.id,
       'name': req.body.name,
       'tokens': req.body.tokens,
       'url': req.body.url,
@@ -104,6 +145,11 @@ module.exports = function(app) {
   app.put('/client/:id', function(req,res) {
     ClientConfig.find({'id':req.params.id}, function(err,clientConfigs){
       
+      if (err) { res.send(err); return; }
+      if (clientConfigs.length > 1) { res.send({'error':'Found more than one client with id: ' + req.params.id}); return; }
+      if (clientConfigs.length === 0) { res.send({'error':'Found no clients with id: ' + req.params.id}); return; }
+      if (req.id !== clientConfigs[0].userId) { res.send({'error':'User does not have permissions to edit client with id: ' + req.params.id}); return; }
+
       var clientConfig = clientConfigs[0];
       
       clientConfig.name = req.body.name || clientConfig.name;
@@ -124,7 +170,7 @@ module.exports = function(app) {
   });
 
   app.get('/client', function(req,res) {
-      ClientConfig.find({}, function(err, configs){
+      ClientConfig.find({'userId':req.id}, function(err, configs){
         if (err) { res.send(err); return; }
         res.json(configs);
         return;
@@ -132,14 +178,21 @@ module.exports = function(app) {
   });
 
   app.delete('/client/:id', function(req,res) {
-    ClientConfig.remove({'id': req.params.id }, function(err,clientConfig){
-      if (err) {
-        res.send(err);
-        return;
-      } else {
-        res.send(clientConfig);
-        return;
-      }
+    ClientConfig.find({'id':req.params.id}, function(err,clientConfigs){
+      if (err) { res.send(err); return; }
+      if (clientConfigs.length > 1) { res.send({'error':'Found more than one client with id: ' + req.params.id}); return; }
+      if (clientConfigs.length === 0) { res.send({'error':'Found no clients with id: ' + req.params.id}); return; }
+      if (req.id !== clientConfigs[0].userId) { res.send({'error':'User does not have permissions to delete client with id: ' + req.params.id}); return; }
+
+      ClientConfig.remove({'id': req.params.id }, function(err,clientConfig){
+        if (err) {
+          res.send(err);
+          return;
+        } else {
+          res.send(clientConfig);
+          return;
+        }
+      });
     });
   });
 
