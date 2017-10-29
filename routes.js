@@ -36,7 +36,17 @@ module.exports = function(app) {
       method: 'POST'
     };
     request(options, function(error, response, body) {
-      var tokenInfo = JSON.parse(body);
+      
+      let tokenInfo;
+      try {
+        tokenInfo = JSON.parse(body);
+      } catch(e) {
+        console.log(e);
+        return res.status(500).json({
+          'error' : 'Unknown error occurred',
+          'details' : e
+        });
+      }
 
       if (!tokenInfo || !tokenInfo.email) {
         var error_message = {
