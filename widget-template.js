@@ -6,5 +6,6 @@ module.exports = mongoose.model('WidgetTemplate', {
   name:         { type: String, default: '' },
   html:         { type: String, default: '' },
   clientIds:    { type: [String], default: '' },
-  tokens:       { type: [String], default: '' }
+  tokens:       { type: [String], default: '' },
+  position:     { type: String, default: '-1' }
 });

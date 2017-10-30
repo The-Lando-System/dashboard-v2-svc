@@ -102,6 +102,8 @@ module.exports = function(app) {
       widgetTemplate.name       = req.body.name       || widgetTemplate.name;
       widgetTemplate.clientIds  = req.body.clientIds  || widgetTemplate.clientIds;
       widgetTemplate.tokens     = req.body.tokens     || widgetTemplate.tokens;
+      widgetTemplate.position   = req.body.position   || widgetTemplate.position;
+      
       widgetTemplate.save(function(err){
         if (err) {
           res.send(err)
