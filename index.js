@@ -27,7 +27,10 @@ app.use(bodyParser.json());
 
 var server = require('http').createServer(app);
 
-require('./routes')(app);
+require('./routes/auth-routes')(app); // Must go first to protect the other routes
+require('./routes/client-routes')(app); 
+require('./routes/widget-routes')(app);
+require('./routes/dashboard-routes')(app);
 require('./socket')(app, server);
 
 server.listen(3000, function () {

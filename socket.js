@@ -1,4 +1,4 @@
-var clientExecutor = require('./client-executor');
+var clientExecutor = require('./services/client-executor');
 
 module.exports = function(app,server) {
 

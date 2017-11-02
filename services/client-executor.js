@@ -1,5 +1,5 @@
 var clientRequest = require('./client-request');
-var ClientConfig = require('./client-config');
+var ClientConfig = require('../models/client-config');
 
 module.exports = {
 
