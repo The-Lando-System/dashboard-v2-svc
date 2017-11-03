@@ -67,16 +67,28 @@ module.exports = {
 
       for (var rule of token.parse_rules){
         
-        // Get the value of a property
-        if (rule.indexOf('@') != -1) {
-          rule = rule.replace('@','');
-          parsedValue = parsedValue[rule];
-        }
-    
-        // Select an element from an array
-        if (rule.indexOf('#') != -1) {
-          rule = rule.replace('#','');
-          parsedValue = parsedValue[parseInt(rule)];
+        try {
+          // Get the value of a property
+          if (rule.indexOf('@') != -1) {
+            rule = rule.replace('@','');
+            parsedValue = parsedValue[rule];
+          }
+      
+          // Select an element from an array
+          if (rule.indexOf('#') != -1) {
+            rule = rule.replace('#','');
+            parsedValue = parsedValue[parseInt(rule)];
+          }
+
+        } catch(e) {
+          console.log('Failed to parse response!');
+          console.log('Raw response:');
+          console.log(JSON.stringify(json,null,2));
+          console.log('Tokens:');
+          console.log(JSON.stringify(tokens,null,2));
+          console.log('Error details:');
+          console.log(e);
+          return;
         }
 
       }
