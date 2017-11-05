@@ -12,7 +12,7 @@ module.exports = function(app) {
       'id': uuidv4(),
       'userId': req.id,
       'name': req.body.name,
-      'widgetIds': req.body.widgetIds,
+      'widgetIds': req.body.widgetIds
     };
 
     Dashboard.create(newDashboard, function(err, dashboard){
@@ -38,8 +38,11 @@ module.exports = function(app) {
 
       var dashboard = dashboards[0];
 
-      dashboard.name       = req.body.name       || dashboard.name;
-      dashboard.widgetIds  = req.body.widgetIds  || dashboard.widgetIds;
+      dashboard.name = req.body.name || dashboard.name;
+      dashboard.widgetIds = req.body.widgetIds || dashboard.widgetIds;
+      dashboard.previewImage = req.body.previewImage || dashboard.previewImage;
+      dashboard.backgroundImage = req.body.backgroundImage || dashboard.backgroundImage;
+      dashboard.isPrimary = req.body.isPrimary || dashboard.isPrimary;
       
       dashboard.save(function(err){
         if (err) {
