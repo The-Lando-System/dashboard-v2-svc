@@ -22,6 +22,7 @@ module.exports = function(app) {
     if (!access_token) {
       return res.status(400).json({
         'error' : 'No access token provided!',
+        'type' : 'NO_TOKEN',
         'details' : 'The header [x-access-token] must be provided in the request'
       });
     }
@@ -39,13 +40,16 @@ module.exports = function(app) {
         console.log(e);
         return res.status(500).json({
           'error' : 'Unknown error occurred',
+          'type' : 'UNKNOWN',
           'details' : e
         });
       }
 
       if (!tokenInfo || !tokenInfo.email) {
         var error_message = {
-          'error' : `Failed to verify access token [${access_token}]`
+          'error' : `Failed to verify access token!`,
+          'type' : 'VERIFY_FAIL',
+          'details' : `Access token [${access_token}]`
         };
         if (error && error.message) {
           error_message.details = error.message;
